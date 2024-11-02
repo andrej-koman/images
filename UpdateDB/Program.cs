@@ -1,4 +1,6 @@
-﻿namespace UpdateDB
+﻿using System.Text;
+
+namespace UpdateDB
 {
     internal class Program
     {
@@ -6,22 +8,33 @@
         {
             string directoryPath = @"C:\projects\images\diskopripajku\2024";
 
-            if (Directory.Exists(directoryPath))
-            {
-                string[] files = Directory.GetFiles(directoryPath);
+            List<UpdateFile> files = UpdateFile.GetFiles(directoryPath);
 
-                foreach (string file in files)
-                {
-                    FileInfo fileInfo = new (file);
-                    Console.WriteLine($"File Name: {fileInfo.Name}");
-                    Console.WriteLine($"File extension: {fileInfo.Extension}");
-                    Console.WriteLine($"Creation Time: {fileInfo.CreationTime}");
-                }
-            }
-            else
+            Console.WriteLine($"Found {files.Count} files.");
+
+            // Create CSV from the file information
+            int year = 2024;
+            var csv = new StringBuilder();
+
+            var headerLine = "name,format,year,blurDataUrl";
+            csv.AppendLine(headerLine);
+            foreach (UpdateFile file in files)
             {
-                Console.WriteLine("Directory does not exist.");
+                var newLine = $"{file.FullName},{file.Extension},{year},";
+                csv.AppendLine(newLine);
             }
+
+            var csvPath = @"C:\projects\images\diskopripajku\2024.csv";
+
+            // If file exists, delete it
+            if (File.Exists(csvPath))
+            {
+                File.Delete(csvPath);
+            }
+
+            File.WriteAllText(csvPath, csv.ToString());
+            Console.WriteLine($"CSV file created at {csvPath}.");
         }
+
     }
 }
