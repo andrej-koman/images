@@ -103,7 +103,8 @@ class Program
                     {
                         newImage.Save(outputPath, ImageFormat.Jpeg);
                         Console.WriteLine($"Saved {Path.GetFileName(inputPath)} with resolution {width}/{height} to {outputPath} with format JPEG");
-                    } else
+                    }
+                    else
                     {
                         Console.WriteLine($"Cannot save {Path.GetFileName(inputPath)} with resolution {width}/{height} to {outputPath} with format {fileInfo.Extension}");
                     }
