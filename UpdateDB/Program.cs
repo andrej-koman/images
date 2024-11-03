@@ -80,6 +80,7 @@ namespace UpdateDB
             {
                 File.Delete(csvPath);
             }
+
             File.WriteAllText(csvPath, csv.ToString());
             Console.WriteLine($"CSV file created at {csvPath}.");
         }
