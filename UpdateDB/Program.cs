@@ -2,145 +2,117 @@
 using System.Drawing.Imaging;
 using System.Text;
 
-namespace UpdateDB
+class Program
 {
-    internal class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
+        string directoryPath = @"C:\projects\images\diskopripajku\2024";
+        int fileCount = 0;
+        int year = 2024;
+
+        // Create CSV from the file information
+        var csv = new StringBuilder();
+        var headerLine = "name,format,year";
+        csv.AppendLine(headerLine);
+
+        // Prepare directories for different file sizes
+        PrepareDirectory(Path.Combine(directoryPath, "180x120"));
+        PrepareDirectory(Path.Combine(directoryPath, "720x480"));
+        PrepareDirectory(Path.Combine(directoryPath, "1280x853"));
+
+        if (Directory.Exists(directoryPath))
         {
-            string directoryPath = @"C:\projects\images\diskopripajku\2024";
-            int fileCount = 0;
-            int year = 2024;
+            string[] filesToPrepare = Directory.GetFiles(directoryPath);
 
-            // Create CSV from the file information
-            var csv = new StringBuilder();
-
-            var headerLine = "name,format,year";
-            csv.AppendLine(headerLine);
-
-            // Prepare directories for different file sizes
-
-            // 180x120px
-            // If the directory exists, empty it
-            if (Directory.Exists(Path.Combine(directoryPath, "180x120")))
+            // First pass to rename any files starting with "_"
+            foreach (string file in filesToPrepare)
             {
-                Directory.Delete(Path.Combine(directoryPath, "180x120"), true);
-            }
-            Directory.CreateDirectory(Path.Combine(directoryPath, "180x120"));
-            Console.WriteLine("Created 180x120 folder.");
-
-            // 720x480px
-            // If the directory exists, empty it
-            if (Directory.Exists(Path.Combine(directoryPath, "720x480")))
-            {
-                Directory.Delete(Path.Combine(directoryPath, "720x480"), true);
-            }
-            Directory.CreateDirectory(Path.Combine(directoryPath, "720x480"));
-            Console.WriteLine("Created 720x480 folder.");
-
-            // 1280x853px 
-            // If the directory exists, empty it
-            if (Directory.Exists(Path.Combine(directoryPath, "1280x853")))
-            {
-                Directory.Delete(Path.Combine(directoryPath, "1280x853"), true);
-            }
-            Directory.CreateDirectory(Path.Combine(directoryPath, "1280x853"));
-            Console.WriteLine("Created 1280x853 folder.");
-
-
-            // Rename files if they start with _
-            if (Directory.Exists(directoryPath))
-            {
-                string[] directoryFilesForRename = Directory.GetFiles(directoryPath);
-
-                // First go trough all files, if any of them start with a _, rename them
-                foreach (string file in directoryFilesForRename)
+                FileInfo fileInfo = new(file);
+                if (fileInfo.Name.StartsWith("_"))
                 {
-                    FileInfo fileInfo = new(file);
-
-                    if (fileInfo.Name.StartsWith("_"))
-                    {
-                        string newFileName = fileInfo.Name.Substring(1);
-                        File.Move(file, Path.Combine(directoryPath, newFileName));
-                        Console.WriteLine($"Renamed {fileInfo.Name} to {newFileName}.");
-                    }
+                    string newFileName = fileInfo.Name.Substring(1);
+                    File.Move(file, Path.Combine(directoryPath, newFileName));
+                    Console.WriteLine($"Renamed {fileInfo.Name} to {newFileName}.");
                 }
             }
 
-            // Refetch the files, just in case any of them got renamed
-            if (Directory.Exists(directoryPath))
+            // Third pass to resize images and generate CSV
+            filesToPrepare = Directory.GetFiles(directoryPath);
+            foreach (string file in filesToPrepare)
             {
-                string[] directoryFiles = Directory.GetFiles(directoryPath);
+                FileInfo fileInfo = new(file);
+                var newLine = $"{fileInfo.Name},{fileInfo.Extension},{year}";
+                csv.AppendLine(newLine);
 
-                // First go trough all files, if any of them start with a _, rename them
-                foreach (string file in directoryFiles)
-                {
-                    FileInfo fileInfo = new(file);
+                ResizeImage(file, Path.Combine(directoryPath, "180x120", fileInfo.Name), 180, 120);
+                ResizeImage(file, Path.Combine(directoryPath, "720x480", fileInfo.Name), 720, 480);
+                ResizeImage(file, Path.Combine(directoryPath, "1280x853", fileInfo.Name), 1280, 853);
 
-                    if (fileInfo.Name.StartsWith("_"))
-                    {
-                        string newFileName = fileInfo.Name.Substring(1);
-                        File.Move(file, Path.Combine(directoryPath, newFileName));
-                        Console.WriteLine($"Renamed {fileInfo.Name} to {newFileName}.");
-                    }
-                }
-
-                foreach (string file in directoryFiles)
-                {
-                    FileInfo fileInfo = new(file);
-
-                    // Add the info to CSV file
-                    var newLine = $"{fileInfo.Name},{fileInfo.Extension},{year}";
-                    csv.AppendLine(newLine);
-
-                    // Resize the image to all sizes needed and save them
-                    // 180x120px
-                    ResizeImage(file, Path.Combine(directoryPath, "180x120", fileInfo.Name), 180, 120);
-
-                    // 720x480px
-                    ResizeImage(file, Path.Combine(directoryPath, "720x480", fileInfo.Name), 720, 480);
-
-                    // 1280x853px
-                    ResizeImage(file, Path.Combine(directoryPath, "1280x853", fileInfo.Name), 1280, 853);
-
-                    Console.WriteLine($"Processed Image {fileCount + 1}");
-
-                    fileCount++;
-                }
+                Console.WriteLine($"Processed Image {fileCount + 1}");
+                fileCount++;
             }
-
-            Console.WriteLine($"Found {fileCount} files.");
-
-            // Save the CSV
-            var csvPath = @"C:\projects\images\diskopripajku\2024.csv";
-            if (File.Exists(csvPath))
-            {
-                File.Delete(csvPath);
-            }
-
-            File.WriteAllText(csvPath, csv.ToString());
-            Console.WriteLine($"CSV file created at {csvPath}.");
         }
 
-        static void ResizeImage(string inputPath, string outputPath, int width, int height)
+        Console.WriteLine($"Found {fileCount} files.");
+
+        var csvPath = @"C:\projects\images\diskopripajku\2024.csv";
+        if (File.Exists(csvPath))
         {
-            if (OperatingSystem.IsWindows())
+            File.Delete(csvPath);
+        }
+
+        File.WriteAllText(csvPath, csv.ToString());
+        Console.WriteLine($"CSV file created at {csvPath}.");
+    }
+
+    static void PrepareDirectory(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, true);
+        }
+        Directory.CreateDirectory(path);
+        Console.WriteLine($"Created {Path.GetFileName(path)} folder.");
+    }
+
+    static void ResizeImage(string inputPath, string outputPath, int width, int height)
+    {
+        try
+        {
+            using (var image = Image.FromFile(inputPath))
             {
-                using (var originalImage = new Bitmap(inputPath))
+                // If the image is vertical, rotate it
+                if (image.Width < image.Height)
                 {
-                    var resizedImage = new Bitmap(width, height);
-                    using (var graphics = Graphics.FromImage(resizedImage))
+                    image.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                    Console.WriteLine($"Rotated {Path.GetFileName(inputPath)} to the left.");
+                }
+                using (var newImage = new Bitmap(width, height))
+                {
+                    using (var graphics = Graphics.FromImage(newImage))
                     {
                         graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
                         graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
                         graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
-                        graphics.DrawImage(originalImage, 0, 0, width, height);
+                        graphics.DrawImage(image, 0, 0, width, height);
                     }
 
-                    resizedImage.Save(outputPath, ImageFormat.Jpeg); // Saves in JPEG format; adjust format as needed
+                    FileInfo fileInfo = new(inputPath);
+                    if (fileInfo.Extension.ToLower() == ".jpg")
+                    {
+                        newImage.Save(outputPath, ImageFormat.Jpeg);
+                        Console.WriteLine($"Saved {Path.GetFileName(inputPath)} with resolution {width}/{height} to {outputPath} with format JPEG");
+                    } else
+                    {
+                        Console.WriteLine($"Cannot save {Path.GetFileName(inputPath)} with resolution {width}/{height} to {outputPath} with format {fileInfo.Extension}");
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error resizing {Path.GetFileName(inputPath)}: {ex.Message}");
         }
     }
 }
