@@ -27,6 +27,7 @@ namespace UpdateDB
                 Directory.Delete(Path.Combine(directoryPath, "180x120"), true);
             }
             Directory.CreateDirectory(Path.Combine(directoryPath, "180x120"));
+            Console.WriteLine("Created 180x120 folder.");
 
             // 720x480px
             // If the directory exists, empty it
@@ -35,6 +36,7 @@ namespace UpdateDB
                 Directory.Delete(Path.Combine(directoryPath, "720x480"), true);
             }
             Directory.CreateDirectory(Path.Combine(directoryPath, "720x480"));
+            Console.WriteLine("Created 720x480 folder.");
 
             // 1280x853px 
             // If the directory exists, empty it
@@ -43,10 +45,45 @@ namespace UpdateDB
                 Directory.Delete(Path.Combine(directoryPath, "1280x853"), true);
             }
             Directory.CreateDirectory(Path.Combine(directoryPath, "1280x853"));
+            Console.WriteLine("Created 1280x853 folder.");
 
+
+            // Rename files if they start with _
+            if (Directory.Exists(directoryPath))
+            {
+                string[] directoryFilesForRename = Directory.GetFiles(directoryPath);
+
+                // First go trough all files, if any of them start with a _, rename them
+                foreach (string file in directoryFilesForRename)
+                {
+                    FileInfo fileInfo = new(file);
+
+                    if (fileInfo.Name.StartsWith("_"))
+                    {
+                        string newFileName = fileInfo.Name.Substring(1);
+                        File.Move(file, Path.Combine(directoryPath, newFileName));
+                        Console.WriteLine($"Renamed {fileInfo.Name} to {newFileName}.");
+                    }
+                }
+            }
+
+            // Refetch the files, just in case any of them got renamed
             if (Directory.Exists(directoryPath))
             {
                 string[] directoryFiles = Directory.GetFiles(directoryPath);
+
+                // First go trough all files, if any of them start with a _, rename them
+                foreach (string file in directoryFiles)
+                {
+                    FileInfo fileInfo = new(file);
+
+                    if (fileInfo.Name.StartsWith("_"))
+                    {
+                        string newFileName = fileInfo.Name.Substring(1);
+                        File.Move(file, Path.Combine(directoryPath, newFileName));
+                        Console.WriteLine($"Renamed {fileInfo.Name} to {newFileName}.");
+                    }
+                }
 
                 foreach (string file in directoryFiles)
                 {
