@@ -20,6 +20,14 @@ namespace UpdateDB
 
             // Prepare directories for different file sizes
 
+            // 180x120px
+            // If the directory exists, empty it
+            if (Directory.Exists(Path.Combine(directoryPath, "180x120")))
+            {
+                Directory.Delete(Path.Combine(directoryPath, "180x120"), true);
+            }
+            Directory.CreateDirectory(Path.Combine(directoryPath, "180x120"));
+
             // 720x480px
             // If the directory exists, empty it
             if (Directory.Exists(Path.Combine(directoryPath, "720x480")))
@@ -27,6 +35,14 @@ namespace UpdateDB
                 Directory.Delete(Path.Combine(directoryPath, "720x480"), true);
             }
             Directory.CreateDirectory(Path.Combine(directoryPath, "720x480"));
+
+            // 1280x853px 
+            // If the directory exists, empty it
+            if (Directory.Exists(Path.Combine(directoryPath, "1280x853")))
+            {
+                Directory.Delete(Path.Combine(directoryPath, "1280x853"), true);
+            }
+            Directory.CreateDirectory(Path.Combine(directoryPath, "1280x853"));
 
             if (Directory.Exists(directoryPath))
             {
@@ -41,8 +57,16 @@ namespace UpdateDB
                     csv.AppendLine(newLine);
 
                     // Resize the image to all sizes needed and save them
+                    // 180x120px
+                    ResizeImage(file, Path.Combine(directoryPath, "180x120", fileInfo.Name), 180, 120);
+
                     // 720x480px
                     ResizeImage(file, Path.Combine(directoryPath, "720x480", fileInfo.Name), 720, 480);
+
+                    // 1280x853px
+                    ResizeImage(file, Path.Combine(directoryPath, "1280x853", fileInfo.Name), 1280, 853);
+
+                    Console.WriteLine($"Processed Image {fileCount + 1}");
 
                     fileCount++;
                 }
