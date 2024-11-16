@@ -6,63 +6,66 @@ class Program
 {
     static void Main(string[] args)
     {
-        string directoryPath = @"C:\projects\images\diskopripajku\2024";
-        int fileCount = 0;
-        int year = 2024;
-
-        // Create CSV from the file information
-        var csv = new StringBuilder();
-        var headerLine = "name,format,year";
-        csv.AppendLine(headerLine);
-
-        // Prepare directories for different file sizes
-        PrepareDirectory(Path.Combine(directoryPath, "180x120"));
-        PrepareDirectory(Path.Combine(directoryPath, "720x480"));
-        PrepareDirectory(Path.Combine(directoryPath, "1280x853"));
-
-        if (Directory.Exists(directoryPath))
+        int[] years = [2024, 2023];
+        for (int i = 0; i < years.Count(); i++)
         {
-            string[] filesToPrepare = Directory.GetFiles(directoryPath);
+            int year = years[i];
+            string directoryPath = @"C:\projects\images\diskopripajku\" + year;
+            int fileCount = 0;
 
-            // First pass to rename any files starting with "_"
-            foreach (string file in filesToPrepare)
+            // Create CSV from the file information
+            var csv = new StringBuilder();
+            var headerLine = "name,format,year";
+            csv.AppendLine(headerLine);
+
+            // Prepare directories for different file sizes
+            PrepareDirectory(Path.Combine(directoryPath, "180x120"));
+            PrepareDirectory(Path.Combine(directoryPath, "720x480"));
+            PrepareDirectory(Path.Combine(directoryPath, "1280x853"));
+
+            if (Directory.Exists(directoryPath))
             {
-                FileInfo fileInfo = new(file);
-                if (fileInfo.Name.StartsWith("_"))
+                string[] filesToPrepare = Directory.GetFiles(directoryPath);
+
+                // First pass to rename any files starting with "_"
+                foreach (string file in filesToPrepare)
                 {
-                    string newFileName = fileInfo.Name.Substring(1);
-                    File.Move(file, Path.Combine(directoryPath, newFileName));
-                    Console.WriteLine($"Renamed {fileInfo.Name} to {newFileName}.");
+                    FileInfo fileInfo = new(file);
+                    if (fileInfo.Name.StartsWith("_"))
+                    {
+                        string newFileName = fileInfo.Name.Substring(1);
+                        File.Move(file, Path.Combine(directoryPath, newFileName));
+                        Console.WriteLine($"Renamed {fileInfo.Name} to {newFileName}.");
+                    }
+                }
+
+                filesToPrepare = Directory.GetFiles(directoryPath);
+                foreach (string file in filesToPrepare)
+                {
+                    FileInfo fileInfo = new(file);
+                    var newLine = $"{fileInfo.Name},{fileInfo.Extension},{year}";
+                    csv.AppendLine(newLine);
+
+                    ResizeImage(file, Path.Combine(directoryPath, "180x120", fileInfo.Name), 180, 120);
+                    ResizeImage(file, Path.Combine(directoryPath, "720x480", fileInfo.Name), 720, 480);
+                    ResizeImage(file, Path.Combine(directoryPath, "1280x853", fileInfo.Name), 1280, 853);
+
+                    Console.WriteLine($"Processed Image {fileCount + 1}");
+                    fileCount++;
                 }
             }
 
-            // Third pass to resize images and generate CSV
-            filesToPrepare = Directory.GetFiles(directoryPath);
-            foreach (string file in filesToPrepare)
+            Console.WriteLine($"Found {fileCount} files for year " + year + ".");
+
+            var csvPath = @"C:\projects\images\diskopripajku\" + year + ".csv";
+            if (File.Exists(csvPath))
             {
-                FileInfo fileInfo = new(file);
-                var newLine = $"{fileInfo.Name},{fileInfo.Extension},{year}";
-                csv.AppendLine(newLine);
-
-                ResizeImage(file, Path.Combine(directoryPath, "180x120", fileInfo.Name), 180, 120);
-                ResizeImage(file, Path.Combine(directoryPath, "720x480", fileInfo.Name), 720, 480);
-                ResizeImage(file, Path.Combine(directoryPath, "1280x853", fileInfo.Name), 1280, 853);
-
-                Console.WriteLine($"Processed Image {fileCount + 1}");
-                fileCount++;
+                File.Delete(csvPath);
             }
+
+            File.WriteAllText(csvPath, csv.ToString());
+            Console.WriteLine($"CSV file created at {csvPath}.");
         }
-
-        Console.WriteLine($"Found {fileCount} files.");
-
-        var csvPath = @"C:\projects\images\diskopripajku\2024.csv";
-        if (File.Exists(csvPath))
-        {
-            File.Delete(csvPath);
-        }
-
-        File.WriteAllText(csvPath, csv.ToString());
-        Console.WriteLine($"CSV file created at {csvPath}.");
     }
 
     static void PrepareDirectory(string path)
