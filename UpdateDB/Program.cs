@@ -6,11 +6,14 @@ class Program
 {
     static void Main(string[] args)
     {
-        int[] years = [2024, 2023];
+        int[] years = [2025, 2024, 2023];
+        // Use cross-platform path - works on both Windows and Linux
+        string baseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "projects", "images", "diskopripajku");
+        
         for (int i = 0; i < years.Count(); i++)
         {
             int year = years[i];
-            string directoryPath = @"C:\projects\images\diskopripajku\" + year;
+            string directoryPath = Path.Combine(baseDirectory, year.ToString());
             int fileCount = 0;
 
             // Create CSV from the file information
@@ -25,7 +28,12 @@ class Program
 
             if (Directory.Exists(directoryPath))
             {
-                string[] filesToPrepare = Directory.GetFiles(directoryPath);
+                string[] filesToPrepare = Directory.GetFiles(directoryPath, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(f => {
+                        string ext = Path.GetExtension(f).ToLowerInvariant();
+                        return ext == ".jpg" || ext == ".jpeg" || ext == ".heic";
+                    })
+                    .ToArray();
 
                 // First pass to rename any files starting with "_"
                 foreach (string file in filesToPrepare)
@@ -39,7 +47,13 @@ class Program
                     }
                 }
 
-                filesToPrepare = Directory.GetFiles(directoryPath);
+                filesToPrepare = Directory.GetFiles(directoryPath, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(f => {
+                        string ext = Path.GetExtension(f).ToLowerInvariant();
+                        return ext == ".jpg" || ext == ".jpeg" || ext == ".heic";
+                    })
+                    .ToArray();
+                    
                 foreach (string file in filesToPrepare)
                 {
                     FileInfo fileInfo = new(file);
@@ -57,7 +71,7 @@ class Program
 
             Console.WriteLine($"Found {fileCount} files for year " + year + ".");
 
-            var csvPath = @"C:\projects\images\diskopripajku\" + year + ".csv";
+            var csvPath = Path.Combine(baseDirectory, year + ".csv");
             if (File.Exists(csvPath))
             {
                 File.Delete(csvPath);
