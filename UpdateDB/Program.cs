@@ -7,9 +7,9 @@ class Program
     static void Main(string[] args)
     {
         int[] years = [2025, 2024, 2023];
-        // Use cross-platform path - works on both Windows and Linux
-        string baseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "projects", "images", "diskopripajku");
-        
+        // Get the parent directory of the current directory (go one folder up)
+        string baseDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.FullName, "diskopripajku");
+        Console.WriteLine($"Base directory set to: {baseDirectory}");
         for (int i = 0; i < years.Count(); i++)
         {
             int year = years[i];
@@ -31,7 +31,7 @@ class Program
                 string[] filesToPrepare = Directory.GetFiles(directoryPath, "*.*", SearchOption.TopDirectoryOnly)
                     .Where(f => {
                         string ext = Path.GetExtension(f).ToLowerInvariant();
-                        return ext == ".jpg" || ext == ".jpeg" || ext == ".heic";
+                        return ext == ".jpg" || ext == ".jpeg";
                     })
                     .ToArray();
 
@@ -50,7 +50,7 @@ class Program
                 filesToPrepare = Directory.GetFiles(directoryPath, "*.*", SearchOption.TopDirectoryOnly)
                     .Where(f => {
                         string ext = Path.GetExtension(f).ToLowerInvariant();
-                        return ext == ".jpg" || ext == ".jpeg" || ext == ".heic";
+                        return ext == ".jpg" || ext == ".jpeg";
                     })
                     .ToArray();
                     
@@ -116,14 +116,14 @@ class Program
                     }
 
                     FileInfo fileInfo = new(inputPath);
-                    if (fileInfo.Extension.ToLower() == ".jpg")
+                    if (fileInfo.Extension.ToLowerInvariant() == ".jpg" || fileInfo.Extension.ToLowerInvariant() == ".jpeg")
                     {
                         newImage.Save(outputPath, ImageFormat.Jpeg);
-                        Console.WriteLine($"Saved {Path.GetFileName(inputPath)} with resolution {width}/{height} to {outputPath} with format JPEG");
+                        Console.WriteLine($"Saved {Path.GetFileName(inputPath)} with resolution {width}x{height}");
                     }
                     else
                     {
-                        Console.WriteLine($"Cannot save {Path.GetFileName(inputPath)} with resolution {width}/{height} to {outputPath} with format {fileInfo.Extension}");
+                        Console.WriteLine($"Skipping unsupported format: {fileInfo.Extension}");
                     }
                 }
             }
